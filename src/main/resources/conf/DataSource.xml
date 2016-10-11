@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" 
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:util="http://www.springframework.org/schema/util" 
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation=" 
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.0.xsd
+        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+        http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+        http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+ 		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd    
+        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<context:property-placeholder location="classpath:/properties/dbconfig.properties" />
+	<!-- 与JPA Hibernate共享一个cacheManager -->
+	<!-- 指定配置文件的位置 -->
+	<cache:annotation-driven cache-manager="cacheManager" />
+	<bean id="cacheManagerFactory"
+		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="classpath:ehcache/ehcache-config.xml" />
+		<property name="shared" value="true" />
+	</bean>
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+		<property name="cacheManager" ref="cacheManagerFactory" />
+	</bean>
+	<!-- 数据源配置, 使用DBCP数据库连接池 -->
+	
+	<!--<bean id="dataSource" class="org.springframework.jndi.JndiObjectFactoryBean"> -->
+	<!-- Connection Info -->
+	<!-- <property name="jndiName" value="jndi/ccweb" /> -->
+	<!--<property name="jndiName" value="java:comp/env/jndi/ccweb"/> -->
+	<!--</bean> -->
+	<bean id="dataSource"
+	    class="org.springframework.jndi.JndiObjectFactoryBean">
+	    <property name="jndiName" value="java:comp/env/MysqlDataSource" />
+	</bean>
+	
+	<bean id="dataSourceSlave1"
+	    class="org.springframework.jndi.JndiObjectFactoryBean">
+	    <property name="jndiName" value="java:comp/env/MysqlDataSourceSlave1" />
+	</bean>
+	
+
+	<!-- Jpa Entity Manager 配置 -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter" />
+		<property name="packagesToScan" value="com.mk.**.entity" />
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+				<prop key="hibernate.cache.factory_class">net.sf.ehcache.hibernate.EhCacheProvider</prop>
+				<prop key="net.sf.ehcache.configurationResourceName">ehcache/ehcache-config.xml</prop>
+				<prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="javax.persistence.validation.mode">none</prop>
+			 	<prop key="hibernate.hbm2ddl.auto">validate</prop>
+				<prop key="hibernate.order_inserts">true</prop>
+				<prop key="hibernate.order_updates">true</prop>
+				<prop key="hibernate.jdbc.batch_size">100</prop>				 	
+			</props>
+		</property>
+	</bean>
+
+	<bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+
+
+	<!-- Spring Data Jpa 配置 com.isprint.workflow,me.kafeitu.demo.activiti, -->
+	<!-- <jpa:repositories base-package="com.isprint.ccservice" transaction-manager-ref="transactionManager" 
+		entity-manager-factory-ref="entityManagerFactory"/> -->
+
+	<!-- Jpa 事务配置 -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<jpa:repositories base-package="com.mk.productmanager.dao"
+		entity-manager-factory-ref="entityManagerFactory"
+		transaction-manager-ref="transactionManager" 
+		repository-impl-postfix="Impl"
+		factory-class="com.mk.core.dao.jpa.DefaultRepositoryFactoryBean">
+	</jpa:repositories>
+
+	<!-- jdbc temple -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource">
+			<ref bean="dataSource" />
+		</property>
+	</bean>
+	
+	<!-- 使用annotation定义事务 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+	
+	<!-- mybaties 多数据库支持 Multi-db vendor support -->
+	<bean id="databaseIdProvider" class="org.apache.ibatis.mapping.VendorDatabaseIdProvider">
+		<property name="properties">
+			<bean
+				class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+				<property name="properties">
+					<props>
+						<prop key="SQL Server">sqlserver</prop>
+						<prop key="DB2">db2</prop>
+						<prop key="Oracle">oracle</prop>
+						<prop key="MySQL">mysql</prop>
+						<prop key="H2">h2</prop>
+					</props>
+				</property>
+			</bean>
+		</property>
+	</bean>
+	<!-- ========================================针对myBatis的配置项============================== -->
+	<bean id="dynamicDataSource" class="com.mk.core.dao.router.DynamicDataSource">
+		<property name="defaultTargetDataSource" ref="dataSource" />
+		<property name="targetDataSources">
+			<map>
+				<!-- 注意这里的value是和上面的DataSource的id对应，key要和下面的CustomerContextHolder中的常量对应。 
+					注意: 增加更多的数据源需要修改DataSourceMethodInterceptor类代码 -->
+				<entry value-ref="dataSourceSlave1" key="dataSourceSlave1" />
+			</map>
+		</property>
+	</bean>
+
+
+	<!-- 配置sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<!-- 导入mybaties.xml -->
+		<property name="configLocation" value="classpath:/mybaties/mybatis-config.xml" />
+
+		<!-- 实例化sqlSessionFactory时需要使用上述配置好的数据源以及SQL映射文件 -->
+		<!--多数据源 -->
+		<property name="dataSource" ref="dynamicDataSource" />
+
+		<!-- 自动扫描me/usermanager/mapping/目录下的所有SQL映射的xml文件, 省掉Configuration.xml里的手工配置 
+			value="classpath:com/mk/productmanager/entity/mapper/*.xml" 这样UserMapper.xml就可以被自动扫描 -->
+		<property name="mapperLocations" value="classpath:com/mk/productmanager/entity/mapper/*.xml" />
+	</bean>
+	<!-- 配置扫描器 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<!-- 扫描me.gacl.dao这个包以及它的子包下的所有映射接口类 -->
+		<property name="basePackage" value="com.mk.productmanager.dao.mapper" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+	
+	<!-- 配置druid监控spring jdbc -->
+	<bean id="druid-stat-interceptor"
+		class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor">
+	</bean>
+	<bean id="druid-stat-pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut"
+		scope="prototype">
+		<property name="patterns">
+			<list>
+				<value>com.mk.productmanager.dao</value>
+			</list>
+		</property>
+	</bean>
+	<aop:config>
+		<aop:advisor advice-ref="druid-stat-interceptor"
+			pointcut-ref="druid-stat-pointcut" />
+	</aop:config>	
+
+
+
+   <!-- 启动触发器的配置开始 -->
+   <!--把 ApplicationContext 注入到 org.springframework.scheduling.quartz.SchedulerFactoryBean -->
+   <bean name="schedulerFactoryBean" lazy-init="false" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="jobFactory">
+            <bean class="com.mk.core.scheduler.quartz.SpringBeanJobFactory" />
+        </property>
+    </bean>
+</beans>
