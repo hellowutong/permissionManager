@@ -15,9 +15,9 @@ import org.springframework.util.Assert;
 /**
  * 
 * @ClassName: DefaultRepositoryFactory 
-* @Description: TODO(这里用一句话描述这个类的作用) 
+* @Description: 扩展JpaRepositoryFactory,使其调用自定义的GenericRepository实现
 * @author TonyWoo
-* @date 2016�?2�?20�? 下午12:27:02 
+* @date 2016年2月20日 下午12:27:02 
 *
  */
 public class DefaultRepositoryFactory extends JpaRepositoryFactory {
