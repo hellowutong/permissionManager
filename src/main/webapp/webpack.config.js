@@ -15,6 +15,29 @@ module.exports={
 			port:'3333',
 			color:true
 		},
+		module:{
+			loaders:[
+				{
+					test:/\.css$/,
+					loader:'style-loader!css-loader'
+				},
+				{
+					test:/\.less$/,
+					loader:'style!css!less'
+				},{
+					test:'/\.json$/',
+					loader:'json'
+				},{
+					test:/\.js$/,
+					exclude:/node_modules/,//被排除的文件夹
+					loader:'babel',
+					query:{
+						presets:['es2015','react']
+					}
+
+				}
+			]
+		},
 		plugin:[
 			new webpack.HotModuleReplacementPlugin()
 		]

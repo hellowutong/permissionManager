@@ -1,0 +1,5 @@
+@import url('font.css');
+@import url('../less/border.less');
+body{
+    background-color: red;
+}

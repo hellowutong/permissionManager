@@ -7,14 +7,24 @@
     "test": "test"
   },
   "scripts": {
-    "start": "webpack",
+    "start": "webpack-dev-server --progress --colors --hot --inline -d",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "babel-core": "^6.17.0",
+    "babel-loader": "^6.2.5",
+    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-react": "^6.16.0",
     "common.js": "^1.1.1",
+    "css-loader": "^0.25.0",
+    "jquery": "^3.1.1",
+    "json-loader": "^0.5.4",
+    "less": "^2.7.1",
+    "less-loader": "^2.2.3",
+    "style-loader": "^0.13.1",
     "webpack": "^1.13.2",
     "webpack-dev-server": "^1.16.2"
   }
