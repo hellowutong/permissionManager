@@ -16,6 +16,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+
 /**
  * 
 * @ClassName: GenericRepositoryImpl 
@@ -41,7 +42,11 @@ public class GenericRepositoryImpl<T, ID extends Serializable> extends SimpleJpa
 	}
 
 	/**
+<<<<<<< HEAD
 	 * 构造函数
+=======
+	 * 构�?�函�?
+>>>>>>> 36390900e852188b1417aad18ac1e20cec9d33ba
 	 * 
 	 * @param domainClass
 	 * @param em
